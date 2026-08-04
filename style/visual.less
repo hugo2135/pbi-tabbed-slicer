@@ -1,0 +1,288 @@
+// 分頁籤階層篩選器 — 樣式
+// 色彩皆由 visual.ts 以 CSS 變數注入，格式窗格可調。
+
+.tts-root {
+  --tts-accent: #0088b0;
+  --tts-text: #201e1d;
+  --tts-bg: #ffffff;
+  --tts-muted: #6b6866;
+  --tts-line: #e6e5e4;
+  --tts-row-h: 28px;
+  --tts-indent: 18px;
+  --tts-font: 12px;
+  --tts-title-font: 14px;
+  --tts-title-color: #201e1d;
+
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--tts-bg);
+  color: var(--tts-text);
+  font-family: "Segoe UI", "Microsoft JhengHei", wf_standard-font, helvetica, arial, sans-serif;
+  font-size: var(--tts-font);
+
+  * {
+    box-sizing: border-box;
+  }
+}
+
+// ── 標題 ──────────────────────────────────────────────
+.tts-header {
+  flex: none;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 6px 4px 2px;
+}
+
+.tts-title {
+  min-width: 0;
+  font-size: var(--tts-title-font);
+  font-weight: 600;
+  color: var(--tts-title-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tts-count {
+  flex: none;
+  font-size: calc(var(--tts-font) - 1px);
+  color: var(--tts-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.tts-count-active {
+  color: var(--tts-accent);
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+// ── 頁籤列 ────────────────────────────────────────────
+.tts-tabs {
+  flex: none;
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+  box-shadow: inset 0 -1px 0 var(--tts-line);
+  overscroll-behavior: contain;
+}
+
+.tts-tabs-track {
+  flex: 1 1 auto;
+  display: flex;
+  gap: 2px;
+  min-width: 0;
+}
+
+.tts-tabnav {
+  flex: none;
+  width: 22px;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  font-size: calc(var(--tts-font) + 3px);
+  line-height: 1;
+  color: var(--tts-accent);
+  border-radius: 3px;
+  padding: 0;
+
+  &:hover:not(:disabled) {
+    background: fade(#000, 5%);
+  }
+
+  &:disabled {
+    color: var(--tts-line);
+    cursor: default;
+  }
+}
+
+.tts-tab {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  padding: 5px 4px 6px;
+  font: inherit;
+  color: var(--tts-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border-radius: 3px 3px 0 0;
+
+  &:hover {
+    color: var(--tts-text);
+    background: fade(#000, 4%);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--tts-accent);
+    outline-offset: -2px;
+  }
+}
+
+.tts-tab-active {
+  color: var(--tts-text);
+  font-weight: 600;
+  background: fade(#000, 4%);
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: auto 0 0 0;
+    height: 2px;
+    background: var(--tts-accent);
+  }
+}
+
+.tts-tab-colored {
+  // 自訂背景色由 visual.ts 內嵌設定；hover 的半透明疊色會蓋掉它，這裡取消
+  &:hover {
+    background: inherit;
+    filter: brightness(0.96);
+  }
+}
+
+.tts-tab-dot {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  margin-left: 4px;
+  border-radius: 50%;
+  background: var(--tts-accent);
+  vertical-align: middle;
+}
+
+// ── 搜尋 ──────────────────────────────────────────────
+.tts-searchwrap {
+  flex: none;
+  padding: 6px 2px 4px;
+}
+
+.tts-search {
+  width: 100%;
+  font: inherit;
+  padding: 4px 6px;
+  border: 1px solid var(--tts-line);
+  border-radius: 3px;
+  background: var(--tts-bg);
+  color: var(--tts-text);
+
+  &:focus {
+    outline: none;
+    border-color: var(--tts-accent);
+  }
+
+  &::-webkit-search-cancel-button {
+    cursor: pointer;
+  }
+}
+
+// ── 清單 ──────────────────────────────────────────────
+.tts-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 2px;
+}
+
+.tts-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: var(--tts-row-h);
+  padding-right: 4px;
+  border-radius: 2px;
+
+  &:hover {
+    background: fade(#000, 4%);
+  }
+}
+
+.tts-row-all {
+  font-weight: 600;
+  box-shadow: inset 0 -1px 0 var(--tts-line);
+}
+
+.tts-check {
+  flex: none;
+  width: 13px;
+  height: 13px;
+  margin: 0;
+  accent-color: var(--tts-accent);
+  cursor: pointer;
+}
+
+.tts-caret {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  color: var(--tts-muted);
+  font-size: 7px;
+  line-height: 1;
+  border-radius: 2px;
+  transform: rotate(0deg);
+  transition: transform 120ms ease;
+
+  &:hover {
+    color: var(--tts-accent);
+  }
+}
+
+.tts-caret-open {
+  transform: rotate(90deg);
+}
+
+.tts-caret-spacer {
+  flex: none;
+  width: 14px;
+}
+
+.tts-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.35;
+}
+
+.tts-rowcount {
+  flex: none;
+  color: var(--tts-muted);
+  font-size: calc(var(--tts-font) - 2px);
+  font-variant-numeric: tabular-nums;
+  padding-left: 4px;
+}
+
+.tts-empty {
+  display: none;
+  white-space: pre-line;
+  padding: 12px 4px;
+  color: var(--tts-muted);
+  line-height: 1.5;
+}
+
+// 高對比模式
+@media (forced-colors: active) {
+  .tts-tab-active::after {
+    background: Highlight;
+  }
+}

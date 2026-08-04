@@ -1,0 +1,27 @@
+{
+  "name": "tabbed-tree-slicer",
+  "version": "1.0.0",
+  "description": "分頁籤式階層勾選篩選器 (Tabbed Hierarchy Slicer) for Power BI",
+  "scripts": {
+    "pbiviz": "pbiviz",
+    "start": "pbiviz start",
+    "package": "pbiviz package",
+    "set-tabs": "node tools/set-tabs.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "author": {
+    "name": "阿果",
+    "email": "hugo2135@gmail.com"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "powerbi-models": "^2.1.1",
+    "powerbi-visuals-api": "~5.11.0",
+    "powerbi-visuals-utils-formattingmodel": "^6.2.2"
+  },
+  "devDependencies": {
+    "powerbi-visuals-tools": "^7.2.1",
+    "less": "^4.2.0",
+    "typescript": "^5.5.4"
+  }
+}

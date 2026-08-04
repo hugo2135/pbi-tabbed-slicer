@@ -1,0 +1,24 @@
+{
+  "visual": {
+    "name": "tabbedTreeSlicer",
+    "displayName": "分頁籤階層篩選器",
+    "guid": "tabbedTreeSlicerA99A12E39D0F43AF91750CD513033959",
+    "visualClassName": "Visual",
+    "version": "1.0.0.0",
+    "description": "以分頁籤呈現多組欄位，每個頁籤內為可搜尋、不限層數的階層勾選清單，支援 Advanced Filter 與 Selection 兩種篩選模式。",
+    "supportUrl": "https://github.com/",
+    "gitHubUrl": "https://github.com/"
+  },
+  "apiVersion": "5.11.0",
+  "author": {
+    "name": "阿果",
+    "email": "hugo2135@gmail.com"
+  },
+  "assets": {
+    "icon": "assets/icon.png"
+  },
+  "style": "style/visual.less",
+  "capabilities": "capabilities.json",
+  "dependencies": null,
+  "stringResources": []
+}

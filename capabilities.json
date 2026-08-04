@@ -1,0 +1,803 @@
+{
+  "privileges": [],
+  "supportsLandingPage": true,
+  "supportsKeyboardFocus": true,
+  "supportsHighlight": false,
+  "supportsSynchronizingFilterState": true,
+  "suppressDefaultTitle": true,
+  "dataRoles": [
+    {
+      "displayName": "頁籤 1 欄位",
+      "description": "放入第 1 個頁籤的欄位；依序拖入多個欄位即形成該頁籤的階層（第一個欄位為最上層，不限層數）。",
+      "name": "tab1",
+      "kind": "Grouping"
+    },
+    {
+      "displayName": "頁籤 2 欄位",
+      "description": "放入第 2 個頁籤的欄位；依序拖入多個欄位即形成該頁籤的階層（第一個欄位為最上層，不限層數）。",
+      "name": "tab2",
+      "kind": "Grouping"
+    },
+    {
+      "displayName": "頁籤 3 欄位",
+      "description": "放入第 3 個頁籤的欄位；依序拖入多個欄位即形成該頁籤的階層（第一個欄位為最上層，不限層數）。",
+      "name": "tab3",
+      "kind": "Grouping"
+    },
+    {
+      "displayName": "頁籤 4 欄位",
+      "description": "放入第 4 個頁籤的欄位；依序拖入多個欄位即形成該頁籤的階層（第一個欄位為最上層，不限層數）。",
+      "name": "tab4",
+      "kind": "Grouping"
+    },
+    {
+      "displayName": "頁籤 5 欄位",
+      "description": "放入第 5 個頁籤的欄位；依序拖入多個欄位即形成該頁籤的階層（第一個欄位為最上層，不限層數）。",
+      "name": "tab5",
+      "kind": "Grouping"
+    },
+    {
+      "displayName": "頁籤 6 欄位",
+      "description": "放入第 6 個頁籤的欄位；依序拖入多個欄位即形成該頁籤的階層（第一個欄位為最上層，不限層數）。",
+      "name": "tab6",
+      "kind": "Grouping"
+    },
+    {
+      "displayName": "頁籤 7 欄位",
+      "description": "放入第 7 個頁籤的欄位；依序拖入多個欄位即形成該頁籤的階層（第一個欄位為最上層，不限層數）。",
+      "name": "tab7",
+      "kind": "Grouping"
+    },
+    {
+      "displayName": "頁籤 8 欄位",
+      "description": "放入第 8 個頁籤的欄位；依序拖入多個欄位即形成該頁籤的階層（第一個欄位為最上層，不限層數）。",
+      "name": "tab8",
+      "kind": "Grouping"
+    },
+    {
+      "displayName": "頁籤 9 欄位",
+      "description": "放入第 9 個頁籤的欄位；依序拖入多個欄位即形成該頁籤的階層（第一個欄位為最上層，不限層數）。",
+      "name": "tab9",
+      "kind": "Grouping"
+    },
+    {
+      "displayName": "頁籤 10 欄位",
+      "description": "放入第 10 個頁籤的欄位；依序拖入多個欄位即形成該頁籤的階層（第一個欄位為最上層，不限層數）。",
+      "name": "tab10",
+      "kind": "Grouping"
+    },
+    {
+      "displayName": "頁籤 11 欄位",
+      "description": "放入第 11 個頁籤的欄位；依序拖入多個欄位即形成該頁籤的階層（第一個欄位為最上層，不限層數）。",
+      "name": "tab11",
+      "kind": "Grouping"
+    },
+    {
+      "displayName": "頁籤 12 欄位",
+      "description": "放入第 12 個頁籤的欄位；依序拖入多個欄位即形成該頁籤的階層（第一個欄位為最上層，不限層數）。",
+      "name": "tab12",
+      "kind": "Grouping"
+    },
+    {
+      "displayName": "頁籤 13 欄位",
+      "description": "放入第 13 個頁籤的欄位；依序拖入多個欄位即形成該頁籤的階層（第一個欄位為最上層，不限層數）。",
+      "name": "tab13",
+      "kind": "Grouping"
+    },
+    {
+      "displayName": "頁籤 14 欄位",
+      "description": "放入第 14 個頁籤的欄位；依序拖入多個欄位即形成該頁籤的階層（第一個欄位為最上層，不限層數）。",
+      "name": "tab14",
+      "kind": "Grouping"
+    },
+    {
+      "displayName": "頁籤 15 欄位",
+      "description": "放入第 15 個頁籤的欄位；依序拖入多個欄位即形成該頁籤的階層（第一個欄位為最上層，不限層數）。",
+      "name": "tab15",
+      "kind": "Grouping"
+    },
+    {
+      "displayName": "頁籤 16 欄位",
+      "description": "放入第 16 個頁籤的欄位；依序拖入多個欄位即形成該頁籤的階層（第一個欄位為最上層，不限層數）。",
+      "name": "tab16",
+      "kind": "Grouping"
+    },
+    {
+      "displayName": "頁籤 17 欄位",
+      "description": "放入第 17 個頁籤的欄位；依序拖入多個欄位即形成該頁籤的階層（第一個欄位為最上層，不限層數）。",
+      "name": "tab17",
+      "kind": "Grouping"
+    },
+    {
+      "displayName": "頁籤 18 欄位",
+      "description": "放入第 18 個頁籤的欄位；依序拖入多個欄位即形成該頁籤的階層（第一個欄位為最上層，不限層數）。",
+      "name": "tab18",
+      "kind": "Grouping"
+    },
+    {
+      "displayName": "頁籤 19 欄位",
+      "description": "放入第 19 個頁籤的欄位；依序拖入多個欄位即形成該頁籤的階層（第一個欄位為最上層，不限層數）。",
+      "name": "tab19",
+      "kind": "Grouping"
+    },
+    {
+      "displayName": "頁籤 20 欄位",
+      "description": "放入第 20 個頁籤的欄位；依序拖入多個欄位即形成該頁籤的階層（第一個欄位為最上層，不限層數）。",
+      "name": "tab20",
+      "kind": "Grouping"
+    },
+    {
+      "displayName": "篩選依據量值 (選填)",
+      "description": "放入任一量值（例如訂單數）後，清單會隨其他篩選器縮減，且只顯示實際有資料的項目。留空則顯示欄位的所有值。",
+      "name": "measure",
+      "kind": "Measure"
+    }
+  ],
+  "dataViewMappings": [
+    {
+      "categorical": {
+        "categories": {
+          "select": [
+            {
+              "for": {
+                "in": "tab1"
+              }
+            },
+            {
+              "for": {
+                "in": "tab2"
+              }
+            },
+            {
+              "for": {
+                "in": "tab3"
+              }
+            },
+            {
+              "for": {
+                "in": "tab4"
+              }
+            },
+            {
+              "for": {
+                "in": "tab5"
+              }
+            },
+            {
+              "for": {
+                "in": "tab6"
+              }
+            },
+            {
+              "for": {
+                "in": "tab7"
+              }
+            },
+            {
+              "for": {
+                "in": "tab8"
+              }
+            },
+            {
+              "for": {
+                "in": "tab9"
+              }
+            },
+            {
+              "for": {
+                "in": "tab10"
+              }
+            },
+            {
+              "for": {
+                "in": "tab11"
+              }
+            },
+            {
+              "for": {
+                "in": "tab12"
+              }
+            },
+            {
+              "for": {
+                "in": "tab13"
+              }
+            },
+            {
+              "for": {
+                "in": "tab14"
+              }
+            },
+            {
+              "for": {
+                "in": "tab15"
+              }
+            },
+            {
+              "for": {
+                "in": "tab16"
+              }
+            },
+            {
+              "for": {
+                "in": "tab17"
+              }
+            },
+            {
+              "for": {
+                "in": "tab18"
+              }
+            },
+            {
+              "for": {
+                "in": "tab19"
+              }
+            },
+            {
+              "for": {
+                "in": "tab20"
+              }
+            }
+          ],
+          "dataReductionAlgorithm": {
+            "window": {
+              "count": 30000
+            }
+          }
+        },
+        "values": {
+          "select": [
+            {
+              "for": {
+                "in": "measure"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "objects": {
+    "general": {
+      "displayName": "一般",
+      "properties": {
+        "filter": {
+          "type": {
+            "filter": {}
+          }
+        },
+        "selfFilter": {
+          "type": {
+            "filter": {
+              "selfFilter": true
+            }
+          }
+        }
+      }
+    },
+    "tabs": {
+      "displayName": "頁籤",
+      "properties": {
+        "perPage": {
+          "displayName": "每頁顯示頁籤數上限",
+          "description": "實際顯示數量會再依視覺寬度自動縮減。",
+          "type": {
+            "numeric": true
+          }
+        },
+        "autoName": {
+          "displayName": "自動使用欄位名稱",
+          "description": "開啟時，頁籤名稱取自該頁籤第一個欄位的名稱。",
+          "type": {
+            "bool": true
+          }
+        },
+        "useTabColors": {
+          "displayName": "啟用頁籤色彩",
+          "type": {
+            "bool": true
+          }
+        },
+        "name1": {
+          "displayName": "頁籤 1 名稱",
+          "type": {
+            "text": true
+          }
+        },
+        "name2": {
+          "displayName": "頁籤 2 名稱",
+          "type": {
+            "text": true
+          }
+        },
+        "name3": {
+          "displayName": "頁籤 3 名稱",
+          "type": {
+            "text": true
+          }
+        },
+        "name4": {
+          "displayName": "頁籤 4 名稱",
+          "type": {
+            "text": true
+          }
+        },
+        "name5": {
+          "displayName": "頁籤 5 名稱",
+          "type": {
+            "text": true
+          }
+        },
+        "name6": {
+          "displayName": "頁籤 6 名稱",
+          "type": {
+            "text": true
+          }
+        },
+        "name7": {
+          "displayName": "頁籤 7 名稱",
+          "type": {
+            "text": true
+          }
+        },
+        "name8": {
+          "displayName": "頁籤 8 名稱",
+          "type": {
+            "text": true
+          }
+        },
+        "name9": {
+          "displayName": "頁籤 9 名稱",
+          "type": {
+            "text": true
+          }
+        },
+        "name10": {
+          "displayName": "頁籤 10 名稱",
+          "type": {
+            "text": true
+          }
+        },
+        "name11": {
+          "displayName": "頁籤 11 名稱",
+          "type": {
+            "text": true
+          }
+        },
+        "name12": {
+          "displayName": "頁籤 12 名稱",
+          "type": {
+            "text": true
+          }
+        },
+        "name13": {
+          "displayName": "頁籤 13 名稱",
+          "type": {
+            "text": true
+          }
+        },
+        "name14": {
+          "displayName": "頁籤 14 名稱",
+          "type": {
+            "text": true
+          }
+        },
+        "name15": {
+          "displayName": "頁籤 15 名稱",
+          "type": {
+            "text": true
+          }
+        },
+        "name16": {
+          "displayName": "頁籤 16 名稱",
+          "type": {
+            "text": true
+          }
+        },
+        "name17": {
+          "displayName": "頁籤 17 名稱",
+          "type": {
+            "text": true
+          }
+        },
+        "name18": {
+          "displayName": "頁籤 18 名稱",
+          "type": {
+            "text": true
+          }
+        },
+        "name19": {
+          "displayName": "頁籤 19 名稱",
+          "type": {
+            "text": true
+          }
+        },
+        "name20": {
+          "displayName": "頁籤 20 名稱",
+          "type": {
+            "text": true
+          }
+        },
+        "bg1": {
+          "displayName": "頁籤 1 背景色",
+          "type": {
+            "fill": {
+              "solid": {
+                "color": true
+              }
+            }
+          }
+        },
+        "bg2": {
+          "displayName": "頁籤 2 背景色",
+          "type": {
+            "fill": {
+              "solid": {
+                "color": true
+              }
+            }
+          }
+        },
+        "bg3": {
+          "displayName": "頁籤 3 背景色",
+          "type": {
+            "fill": {
+              "solid": {
+                "color": true
+              }
+            }
+          }
+        },
+        "bg4": {
+          "displayName": "頁籤 4 背景色",
+          "type": {
+            "fill": {
+              "solid": {
+                "color": true
+              }
+            }
+          }
+        },
+        "bg5": {
+          "displayName": "頁籤 5 背景色",
+          "type": {
+            "fill": {
+              "solid": {
+                "color": true
+              }
+            }
+          }
+        },
+        "bg6": {
+          "displayName": "頁籤 6 背景色",
+          "type": {
+            "fill": {
+              "solid": {
+                "color": true
+              }
+            }
+          }
+        },
+        "bg7": {
+          "displayName": "頁籤 7 背景色",
+          "type": {
+            "fill": {
+              "solid": {
+                "color": true
+              }
+            }
+          }
+        },
+        "bg8": {
+          "displayName": "頁籤 8 背景色",
+          "type": {
+            "fill": {
+              "solid": {
+                "color": true
+              }
+            }
+          }
+        },
+        "bg9": {
+          "displayName": "頁籤 9 背景色",
+          "type": {
+            "fill": {
+              "solid": {
+                "color": true
+              }
+            }
+          }
+        },
+        "bg10": {
+          "displayName": "頁籤 10 背景色",
+          "type": {
+            "fill": {
+              "solid": {
+                "color": true
+              }
+            }
+          }
+        },
+        "bg11": {
+          "displayName": "頁籤 11 背景色",
+          "type": {
+            "fill": {
+              "solid": {
+                "color": true
+              }
+            }
+          }
+        },
+        "bg12": {
+          "displayName": "頁籤 12 背景色",
+          "type": {
+            "fill": {
+              "solid": {
+                "color": true
+              }
+            }
+          }
+        },
+        "bg13": {
+          "displayName": "頁籤 13 背景色",
+          "type": {
+            "fill": {
+              "solid": {
+                "color": true
+              }
+            }
+          }
+        },
+        "bg14": {
+          "displayName": "頁籤 14 背景色",
+          "type": {
+            "fill": {
+              "solid": {
+                "color": true
+              }
+            }
+          }
+        },
+        "bg15": {
+          "displayName": "頁籤 15 背景色",
+          "type": {
+            "fill": {
+              "solid": {
+                "color": true
+              }
+            }
+          }
+        },
+        "bg16": {
+          "displayName": "頁籤 16 背景色",
+          "type": {
+            "fill": {
+              "solid": {
+                "color": true
+              }
+            }
+          }
+        },
+        "bg17": {
+          "displayName": "頁籤 17 背景色",
+          "type": {
+            "fill": {
+              "solid": {
+                "color": true
+              }
+            }
+          }
+        },
+        "bg18": {
+          "displayName": "頁籤 18 背景色",
+          "type": {
+            "fill": {
+              "solid": {
+                "color": true
+              }
+            }
+          }
+        },
+        "bg19": {
+          "displayName": "頁籤 19 背景色",
+          "type": {
+            "fill": {
+              "solid": {
+                "color": true
+              }
+            }
+          }
+        },
+        "bg20": {
+          "displayName": "頁籤 20 背景色",
+          "type": {
+            "fill": {
+              "solid": {
+                "color": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "behavior": {
+      "displayName": "篩選行為",
+      "properties": {
+        "mode": {
+          "displayName": "篩選模式",
+          "description": "篩選器＝送出真正的篩選條件（等同原生交叉篩選器）；選取＝僅做交叉醒目提示。",
+          "type": {
+            "enumeration": [
+              {
+                "value": "filter",
+                "displayName": "篩選器 (Filter)"
+              },
+              {
+                "value": "select",
+                "displayName": "選取 / 交叉醒目提示 (Select)"
+              }
+            ]
+          }
+        },
+        "singleSelect": {
+          "displayName": "單選模式",
+          "type": {
+            "bool": true
+          }
+        },
+        "selectChildren": {
+          "displayName": "勾選父項時連動子項",
+          "type": {
+            "bool": true
+          }
+        },
+        "showSelectAll": {
+          "displayName": "顯示「全選」列",
+          "type": {
+            "bool": true
+          }
+        },
+        "expandAll": {
+          "displayName": "預設全部展開",
+          "type": {
+            "bool": true
+          }
+        },
+        "resetOnTabChange": {
+          "displayName": "切換頁籤時清除搜尋字串",
+          "type": {
+            "bool": true
+          }
+        },
+        "crossTab": {
+          "displayName": "頁籤之間互相篩選",
+          "description": "開啟後，切換頁籤時清單會依其他頁籤已勾選的條件縮減。代價是切換頁籤會重新查詢一次。",
+          "type": {
+            "bool": true
+          }
+        }
+      }
+    },
+    "header": {
+      "displayName": "標題",
+      "properties": {
+        "show": {
+          "displayName": "顯示",
+          "type": {
+            "bool": true
+          }
+        },
+        "text": {
+          "displayName": "標題文字",
+          "type": {
+            "text": true
+          }
+        },
+        "showCount": {
+          "displayName": "顯示已選取數量",
+          "type": {
+            "bool": true
+          }
+        },
+        "fontColor": {
+          "displayName": "字型色彩",
+          "type": {
+            "fill": {
+              "solid": {
+                "color": true
+              }
+            }
+          }
+        },
+        "fontSize": {
+          "displayName": "字型大小",
+          "type": {
+            "numeric": true
+          }
+        }
+      }
+    },
+    "search": {
+      "displayName": "搜尋",
+      "properties": {
+        "show": {
+          "displayName": "顯示搜尋框",
+          "type": {
+            "bool": true
+          }
+        },
+        "placeholder": {
+          "displayName": "提示文字",
+          "type": {
+            "text": true
+          }
+        },
+        "searchAllLevels": {
+          "displayName": "搜尋所有層級",
+          "type": {
+            "bool": true
+          }
+        }
+      }
+    },
+    "items": {
+      "displayName": "項目",
+      "properties": {
+        "fontColor": {
+          "displayName": "字型色彩",
+          "type": {
+            "fill": {
+              "solid": {
+                "color": true
+              }
+            }
+          }
+        },
+        "accentColor": {
+          "displayName": "強調色彩",
+          "type": {
+            "fill": {
+              "solid": {
+                "color": true
+              }
+            }
+          }
+        },
+        "backgroundColor": {
+          "displayName": "背景色彩",
+          "type": {
+            "fill": {
+              "solid": {
+                "color": true
+              }
+            }
+          }
+        },
+        "rowHeight": {
+          "displayName": "列高 (px)",
+          "type": {
+            "numeric": true
+          }
+        },
+        "indent": {
+          "displayName": "階層縮排 (px)",
+          "type": {
+            "numeric": true
+          }
+        },
+        "showCounts": {
+          "displayName": "顯示子項數量",
+          "type": {
+            "bool": true
+          }
+        },
+        "fontSize": {
+          "displayName": "字型大小",
+          "type": {
+            "numeric": true
+          }
+        }
+      }
+    }
+  }
+}
