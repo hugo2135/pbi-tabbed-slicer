@@ -166,12 +166,14 @@ function buildTree(
 
             let node = nodeMap.get(key);
             if (!node) {
-                // selectionId：把從根到目前層的所有欄位串起來，
-                // 讓交叉醒目提示能對應到正確的資料範圍。
-                const builder = host.createSelectionIdBuilder();
-                for (let l = 0; l <= level; l++) {
-                    builder.withCategory(categories[l], row);
-                }
+                // selectionId 只綁「這個節點自己那一層」的欄位。
+                //
+                // 曾經改成把根到本層的所有欄位串起來（連續呼叫 withCategory），
+                // 想讓交叉醒目提示更精準 —— 結果 Power BI 無法把那種複合識別
+                // 對應到任何資料，選取變成完全沒有反應。單一 withCategory
+                // 才是 SDK 實際支援的用法。
+                const builder = host.createSelectionIdBuilder()
+                    .withCategory(categories[level], row);
                 node = {
                     key,
                     label: formatValue(raw),

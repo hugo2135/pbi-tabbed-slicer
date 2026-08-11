@@ -71,6 +71,50 @@ function clearElement(el: HTMLElement): void {
     }
 }
 
+/** 說明面板的內容。改功能時記得一起更新。 */
+const HELP_SECTIONS: { title: string; items: string[] }[] = [
+    {
+        title: "選取",
+        items: [
+            "點項目或勾選框即可篩選，可同時勾多個。",
+            "按住 Shift 點第一項設為起點（左側出現色條），再按住 Shift 點第二項，中間全部一起勾選。",
+            "一般點擊不會影響 Shift 的起點。",
+            "勾選父項會連同底下所有子項一起選取。"
+        ]
+    },
+    {
+        title: "展開 / 折疊",
+        items: [
+            "項目左側的三角形可展開下一層。",
+            "在有下層的項目上按滑鼠右鍵，也可以直接展開或折疊。",
+            "上方「全部展開 / 全部折疊」只作用在目前的頁籤。"
+        ]
+    },
+    {
+        title: "搜尋",
+        items: [
+            "輸入關鍵字會同時比對所有層級，命中的分支會自動展開。",
+            "搜尋時「全選」會變成「全選搜尋結果」，只勾選符合的項目。",
+            "資料量大時可請報表製作者開啟「伺服器端搜尋」，就能搜到超過顯示上限之外的項目（搜尋框閃動代表正在查詢）。"
+        ]
+    },
+    {
+        title: "頁籤",
+        items: [
+            "每個頁籤是一組獨立的篩選條件，彼此以 AND 結合。",
+            "頁籤放不下時會出現 ‹ › 按鈕，也可以用滑鼠滾輪橫向捲動。",
+            "在某個頁籤勾選後，其他頁籤的清單會跟著縮減。"
+        ]
+    },
+    {
+        title: "清除",
+        items: [
+            "點右上「已選 N 項」會清除**目前頁籤**的勾選。",
+            "其他頁籤也有勾選時，右邊會出現「全部 N · 清除」，點它才是清掉所有頁籤。"
+        ]
+    }
+];
+
 interface Row {
     node: TreeNode;
     depth: number;
@@ -91,12 +135,21 @@ export class Visual implements IVisual {
     private headerEl: HTMLElement;
     private titleEl: HTMLElement;
     private countEl: HTMLElement;
+    private helpBtn: HTMLButtonElement;
+    private helpPanelEl: HTMLElement;
+    private helpOpen = false;
     private tabsEl: HTMLElement;
     private tabsTrackEl: HTMLElement;
     private prevBtn: HTMLButtonElement;
     private nextBtn: HTMLButtonElement;
+    private toolbarEl: HTMLElement;
+    private expandAllBtn: HTMLButtonElement;
+    private collapseAllBtn: HTMLButtonElement;
     private searchWrapEl: HTMLElement;
     private searchEl: HTMLInputElement;
+    private statusBarEl: HTMLElement;
+    private selectAllBox: HTMLInputElement;
+    private selectAllLabel: HTMLElement;
     private listEl: HTMLElement;
     private emptyEl: HTMLElement;
 
@@ -115,6 +168,28 @@ export class Visual implements IVisual {
     private selection: SelectionStore = new Map();
     private wheelAcc = 0;
     private viewport = { width: 0, height: 0 };
+    /**
+     * 按過「全部折疊」後，要能蓋過格式窗格的「預設全部展開」設定，
+     * 否則按了沒反應。null = 跟隨設定。
+     */
+    private expandAllOverride: boolean | null = null;
+    /** 目前畫面上顯示的列，Shift 區間勾選要靠它算範圍 */
+    private visibleRows: Row[] = [];
+    /**
+     * Shift 區間的起點。**只有 Shift 點擊會設定它**，一般點擊不會動到 ——
+     * 否則使用者先隨手勾了一項，之後想用 Shift 圈範圍時，
+     * 起點會莫名其妙變成那個隨手勾的項目。
+     * 用 key 而不是索引，這樣重繪、捲動、展開折疊都不會錯位。
+     */
+    private shiftAnchorKey: string | null = null;
+    /** click 先於 change 觸發，用它把 Shift 狀態傳給 change 處理 */
+    private shiftPending = false;
+    /** 伺服器端搜尋的防抖計時器 */
+    private searchTimer: number | null = null;
+    /** 已經送進查詢的搜尋字串，用來判斷需不需要重新查 */
+    private appliedQuery = "";
+    /** 等待查詢回來時顯示提示，避免使用者以為當掉 */
+    private searchPending = false;
     /** 剛剛是我們自己送出篩選，下一次 update 不要再從 jsonFilters 還原 */
     private selfApplied = false;
     private events: powerbi.extensibility.IVisualEventService;
@@ -128,9 +203,14 @@ export class Visual implements IVisual {
         this.events = this.host.eventService;
         this.buildDom(options.element);
 
-        // 右鍵內容功能表
+        // 右鍵內容功能表。
+        // 在有下層的項目上按右鍵是「展開/折疊」（由該列自己處理並吃掉事件），
+        // 其他地方才叫出 Power BI 的內容功能表。
         this.root.addEventListener("contextmenu", (ev: MouseEvent) => {
             ev.preventDefault();
+            if ((ev as MouseEvent & { ttsHandled?: boolean }).ttsHandled) {
+                return;
+            }
             this.selectionManager.showContextMenu({}, { x: ev.clientX, y: ev.clientY });
         });
     }
@@ -150,10 +230,36 @@ export class Visual implements IVisual {
         this.countEl = document.createElement("div");
         this.countEl.className = "tts-count";
         this.countEl.setAttribute("role", "status");
-        this.countEl.addEventListener("click", () => this.clearAll());
+
+        this.helpBtn = document.createElement("button");
+        this.helpBtn.type = "button";
+        this.helpBtn.className = "tts-help";
+        this.helpBtn.textContent = "?";
+        this.helpBtn.title = "操作說明";
+        this.helpBtn.setAttribute("aria-label", "操作說明");
+        this.helpBtn.addEventListener("click", (ev) => {
+            ev.stopPropagation();
+            this.toggleHelp();
+        });
+
         this.headerEl.appendChild(this.titleEl);
         this.headerEl.appendChild(this.countEl);
+        this.headerEl.appendChild(this.helpBtn);
         this.root.appendChild(this.headerEl);
+
+        // 說明面板（覆蓋在清單上，預設隱藏）
+        this.helpPanelEl = document.createElement("div");
+        this.helpPanelEl.className = "tts-helppanel";
+        this.helpPanelEl.style.display = "none";
+        this.root.appendChild(this.helpPanelEl);
+
+        // 點面板以外的地方就關閉
+        this.root.addEventListener("click", () => {
+            if (this.helpOpen) {
+                this.toggleHelp(false);
+            }
+        });
+        this.helpPanelEl.addEventListener("click", ev => ev.stopPropagation());
 
         // 頁籤列
         this.tabsEl = document.createElement("div");
@@ -197,6 +303,26 @@ export class Visual implements IVisual {
             this.scrollTabs(step);
         }, { passive: false });
 
+        // 工具列（標題／頁籤 與 搜尋列 之間）：全部展開 / 全部折疊
+        this.toolbarEl = document.createElement("div");
+        this.toolbarEl.className = "tts-toolbar";
+
+        this.expandAllBtn = document.createElement("button");
+        this.expandAllBtn.type = "button";
+        this.expandAllBtn.className = "tts-toolbtn";
+        this.expandAllBtn.textContent = "全部展開";
+        this.expandAllBtn.addEventListener("click", () => this.setAllExpanded(true));
+
+        this.collapseAllBtn = document.createElement("button");
+        this.collapseAllBtn.type = "button";
+        this.collapseAllBtn.className = "tts-toolbtn";
+        this.collapseAllBtn.textContent = "全部折疊";
+        this.collapseAllBtn.addEventListener("click", () => this.setAllExpanded(false));
+
+        this.toolbarEl.appendChild(this.expandAllBtn);
+        this.toolbarEl.appendChild(this.collapseAllBtn);
+        this.root.appendChild(this.toolbarEl);
+
         // 搜尋列
         this.searchWrapEl = document.createElement("div");
         this.searchWrapEl.className = "tts-searchwrap";
@@ -205,10 +331,35 @@ export class Visual implements IVisual {
         this.searchEl.className = "tts-search";
         this.searchEl.addEventListener("input", () => {
             this.query = this.searchEl.value;
+            // 清單內容變了，原本的區間起點不再有意義
+            this.shiftAnchorKey = null;
             this.renderList();
+            this.scheduleServerSearch();
         });
         this.searchWrapEl.appendChild(this.searchEl);
         this.root.appendChild(this.searchWrapEl);
+
+        // 狀態列：固定在捲動區之外，永遠存在。
+        // 左邊是「全選」（可由格式窗格關閉），右邊是「未篩選／已選 N 項」。
+        // 固定住的好處是捲到清單深處也還能全選與清除。
+        this.statusBarEl = document.createElement("div");
+        this.statusBarEl.className = "tts-statusbar";
+
+        this.selectAllBox = document.createElement("input");
+        this.selectAllBox.type = "checkbox";
+        this.selectAllBox.className = "tts-check";
+
+        this.selectAllLabel = document.createElement("div");
+        this.selectAllLabel.className = "tts-label tts-label-all";
+        this.selectAllLabel.addEventListener("click", () => {
+            this.selectAllBox.checked = !this.selectAllBox.checked;
+            this.selectAllBox.dispatchEvent(new Event("change"));
+        });
+
+        this.statusBarEl.appendChild(this.selectAllBox);
+        this.statusBarEl.appendChild(this.selectAllLabel);
+        this.statusBarEl.appendChild(this.countEl);
+        this.root.appendChild(this.statusBarEl);
 
         // 清單
         this.listEl = document.createElement("div");
@@ -295,6 +446,11 @@ export class Visual implements IVisual {
             }
         }
 
+        // 查詢回來了，解除搜尋中的提示
+        if (this.searchPending && this.query.trim() === this.appliedQuery) {
+            this.searchPending = false;
+        }
+
         this.applyTheme();
         this.render();
     }
@@ -356,17 +512,24 @@ export class Visual implements IVisual {
         this.headerEl.style.display = s.header.show.value ? "flex" : "none";
         this.titleEl.textContent = s.header.text.value || "";
         if (s.header.showCount.value) {
-            let n = 0;
-            this.selection.forEach(m => { n += m.size; });
-            this.countEl.style.display = "block";
-            this.countEl.textContent = n > 0 ? `已選 ${n} 項 · 清除` : "未篩選";
-            this.countEl.classList.toggle("tts-count-active", n > 0);
+            this.countEl.style.display = "flex";
+            this.renderCount();
         } else {
             this.countEl.style.display = "none";
         }
 
         // 搜尋
+        // 說明按鈕
+        this.helpBtn.style.display = s.header.show.value && s.header.showHelp.value ? "block" : "none";
+        if (!s.header.showHelp.value && this.helpOpen) {
+            this.toggleHelp(false);
+        }
+
+        // 工具列：這個頁籤沒有階層就沒必要顯示
+        this.toolbarEl.style.display = this.hasExpandableNodes() ? "flex" : "none";
+
         this.searchWrapEl.style.display = s.search.show.value ? "block" : "none";
+        this.renderSearchState();
         this.searchEl.placeholder = s.search.placeholder.value || "搜尋…";
         if (this.searchEl.value !== this.query) {
             this.searchEl.value = this.query;
@@ -419,6 +582,9 @@ export class Visual implements IVisual {
                     return;
                 }
                 this.activeTab = i;
+                this.shiftAnchorKey = null;
+                // 搜尋條件綁在原本頁籤的欄位上，換頁籤就得作廢
+                this.appliedQuery = "";
                 if (this.settings.behavior.resetOnTabChange.value) {
                     this.query = "";
                     this.searchEl.value = "";
@@ -460,6 +626,62 @@ export class Visual implements IVisual {
     }
 
     /**
+     * 更新固定狀態列。
+     *
+     * 這一列永遠存在：左邊的「全選」可由格式窗格關閉，
+     * 右邊的「未篩選／已選 N 項」則固定顯示在同一個位置，
+     * 不會因為設定或資料狀態而跑位。
+     *
+     * 有搜尋字串時，全選只對搜尋結果作用。
+     */
+    private updateStatusBar(tab: TabModel | null, rows: Row[]): void {
+        const showAll = this.settings.behavior.showSelectAll.value && !!tab && rows.length > 0;
+        this.selectAllBox.style.display = showAll ? "block" : "none";
+        this.selectAllLabel.style.display = showAll ? "block" : "none";
+
+        if (!showAll) {
+            this.selectAllBox.onchange = null;
+            return;
+        }
+
+        const searching = this.query.trim().length > 0;
+
+        // 搜尋中只看畫面上這些列，並排除掉「祖先也在畫面上」的重複範圍
+        const scopeNodes = searching
+            ? rows.filter(r => !rows.some(o => o !== r && this.isDescendantOf(r.node, o.node)))
+                .map(r => r.node)
+            : tab.roots;
+
+        const leafKeys = new Set<string>();
+        const collect = (n: TreeNode): void => {
+            if (n.children.length === 0) {
+                leafKeys.add(n.key);
+                return;
+            }
+            n.children.forEach(collect);
+        };
+        scopeNodes.forEach(collect);
+
+        let checkedCount = 0;
+        leafKeys.forEach(k => { if (this.checked.has(k)) { checkedCount++; } });
+
+        this.selectAllBox.checked = leafKeys.size > 0 && checkedCount === leafKeys.size;
+        this.selectAllBox.indeterminate = checkedCount > 0 && checkedCount < leafKeys.size;
+        this.selectAllLabel.textContent = searching
+            ? `全選搜尋結果（${leafKeys.size}）`
+            : "全選";
+
+        // 用指派而非 addEventListener，避免每次重繪疊加處理器
+        this.selectAllBox.onchange = () => {
+            const on = this.selectAllBox.checked;
+            scopeNodes.forEach(n => this.setNodeChecked(n, on, true));
+            scopeNodes.forEach(n => this.fixAncestors(n));
+            this.syncSelection(tab);
+            this.commit();
+        };
+    }
+
+    /**
      * 該頁籤選了幾項。用 selection 而非樹，因為非目前頁籤的項目
      * 可能已被自我篩選濾掉、不在樹上。
      */
@@ -479,10 +701,11 @@ export class Visual implements IVisual {
         if (!tab) {
             this.emptyEl.style.display = "block";
             this.emptyEl.textContent = this.model.isEmpty
-                ? "把欄位拖入右側「頁籤 1~8 欄位」，同一個頁籤放多個欄位即形成階層。\n"
+                ? "把欄位拖入右側「頁籤 1~n 欄位」，同一個頁籤放多個欄位即形成階層。\n"
                   + "建議在「篩選依據量值」放一個量值，清單才會隨其他篩選器縮減。\n"
                   + "注意：所有頁籤的欄位必須來自模型中彼此有關聯的資料表。"
                 : "此頁籤沒有資料。";
+            this.updateStatusBar(null, []);
             return;
         }
 
@@ -492,16 +715,16 @@ export class Visual implements IVisual {
             this.emptyEl.textContent = this.query
                 ? `沒有符合「${this.query}」的項目。`
                 : "此頁籤沒有資料。";
+            this.updateStatusBar(tab, []);
             return;
         }
         this.emptyEl.style.display = "none";
+        this.visibleRows = rows;
 
-        if (this.settings.behavior.showSelectAll.value && !this.query) {
-            this.listEl.appendChild(this.buildSelectAllRow(tab));
-        }
+        this.updateStatusBar(tab, rows);
 
         const frag = document.createDocumentFragment();
-        rows.forEach(row => frag.appendChild(this.buildRowElement(tab, row)));
+        rows.forEach((row, index) => frag.appendChild(this.buildRowElement(tab, row, index)));
         this.listEl.appendChild(frag);
     }
 
@@ -531,7 +754,7 @@ export class Visual implements IVisual {
             const hasChildren = node.children.length > 0;
             // 搜尋時自動展開命中的分支
             const expanded = hasChildren && (
-                q ? true : (this.expanded.has(node.key) || this.settings.behavior.expandAll.value)
+                q ? true : (this.expanded.has(node.key) || this.defaultExpanded())
             );
 
             rows.push({
@@ -600,45 +823,15 @@ export class Visual implements IVisual {
         return all ? "all" : (any ? "some" : "none");
     }
 
-    private buildSelectAllRow(tab: TabModel): HTMLElement {
-        const total = tab.leaves.length;
-        const selected = this.countCheckedInTab(tab);
-        const row = document.createElement("div");
-        row.className = "tts-row tts-row-all";
-
-        const box = document.createElement("input");
-        box.type = "checkbox";
-        box.className = "tts-check";
-        box.checked = selected > 0 && selected >= total;
-        box.indeterminate = selected > 0 && selected < total;
-        box.addEventListener("change", () => {
-            if (box.checked) {
-                tab.nodeMap.forEach((_n, k) => this.checked.add(k));
-            } else {
-                tab.nodeMap.forEach((_n, k) => this.checked.delete(k));
-            }
-            this.syncSelection(tab);
-            this.commit();
-        });
-
-        const label = document.createElement("div");
-        label.className = "tts-label tts-label-all";
-        label.textContent = "全選";
-        label.addEventListener("click", () => {
-            box.checked = !box.checked;
-            box.dispatchEvent(new Event("change"));
-        });
-
-        row.appendChild(box);
-        row.appendChild(label);
-        return row;
-    }
-
-    private buildRowElement(tab: TabModel, row: Row): HTMLElement {
+    private buildRowElement(tab: TabModel, row: Row, index: number): HTMLElement {
         const el = document.createElement("div");
-        el.className = "tts-row";
+        el.className = "tts-row"
+            + (row.node.key === this.shiftAnchorKey ? " tts-row-anchor" : "");
         el.setAttribute("role", "treeitem");
         el.style.paddingLeft = `calc(${row.depth} * var(--tts-indent))`;
+        if (row.node.key === this.shiftAnchorKey) {
+            el.title = "區間起點 —— 按住 Shift 點另一列即可框選中間全部";
+        }
 
         const box = document.createElement("input");
         box.type = "checkbox";
@@ -646,7 +839,11 @@ export class Visual implements IVisual {
         box.checked = row.checked;
         box.indeterminate = row.indeterminate;
         box.setAttribute("aria-label", row.node.label);
-        box.addEventListener("change", () => this.toggleCheck(tab, row.node, box.checked));
+        // click 早於 change，在這裡把 Shift 狀態記下來給 change 用
+        box.addEventListener("click", (ev: MouseEvent) => {
+            this.shiftPending = ev.shiftKey;
+        });
+        box.addEventListener("change", () => this.handleRowToggle(tab, row, index, box.checked));
         el.appendChild(box);
 
         if (row.hasChildren) {
@@ -657,14 +854,18 @@ export class Visual implements IVisual {
             caret.textContent = "▶";
             caret.addEventListener("click", (ev) => {
                 ev.stopPropagation();
-                if (this.expanded.has(row.node.key)) {
-                    this.expanded.delete(row.node.key);
-                } else {
-                    this.expanded.add(row.node.key);
-                }
-                this.renderList();
+                this.toggleExpand(row.node);
             });
             el.appendChild(caret);
+
+            // 有下層時，整列按右鍵＝展開/折疊，不叫出 Power BI 的內容功能表
+            el.classList.add("tts-row-expandable");
+            el.addEventListener("contextmenu", (ev: MouseEvent) => {
+                ev.preventDefault();
+                ev.stopPropagation();
+                (ev as MouseEvent & { ttsHandled?: boolean }).ttsHandled = true;
+                this.toggleExpand(row.node);
+            });
         } else {
             const spacer = document.createElement("span");
             spacer.className = "tts-caret-spacer";
@@ -675,9 +876,9 @@ export class Visual implements IVisual {
         label.className = "tts-label";
         label.textContent = row.node.label;
         label.title = `${tab.levelNames[row.node.level] ?? ""}：${row.node.label}`;
-        label.addEventListener("click", () => {
-            const next = !(row.checked);
-            this.toggleCheck(tab, row.node, next);
+        label.addEventListener("click", (ev: MouseEvent) => {
+            this.shiftPending = ev.shiftKey;
+            this.handleRowToggle(tab, row, index, !row.checked);
         });
         el.appendChild(label);
 
@@ -689,6 +890,185 @@ export class Visual implements IVisual {
         }
 
         return el;
+    }
+
+    /**
+     * 展開/折疊某個節點。只有真的有下一層的節點才會被呼叫到
+     * （呼叫端已用 row.hasChildren 判斷過）。
+     */
+    // ── 伺服器端搜尋 ───────────────────────────────────────────────
+
+    private serverSearchEnabled(): boolean {
+        return this.settings.search.show.value
+            && this.settings.search.serverSide.value
+            && this.settings.behavior.mode.value.value === "filter";
+    }
+
+    /**
+     * 打字時排程一次查詢。每按一個鍵就查一次太貴，
+     * 所以等使用者停手 400ms 才送出。
+     */
+    private scheduleServerSearch(): void {
+        if (!this.serverSearchEnabled()) {
+            return;
+        }
+        if (this.searchTimer !== null) {
+            clearTimeout(this.searchTimer);
+        }
+        this.searchPending = this.query.trim() !== this.appliedQuery;
+        this.renderSearchState();
+
+        this.searchTimer = window.setTimeout(() => {
+            this.searchTimer = null;
+            const next = this.query.trim();
+            if (next === this.appliedQuery) {
+                this.searchPending = false;
+                this.renderSearchState();
+                return;
+            }
+            this.appliedQuery = next;
+            this.commit();
+        }, 400);
+    }
+
+    /**
+     * 目前搜尋字串要送出的查詢條件。
+     * 只有伺服器端搜尋開啟、而且該頁籤有欄位時才產生。
+     */
+    private currentSearchFilter(): IFilter | null {
+        if (!this.serverSearchEnabled() || !this.appliedQuery) {
+            return null;
+        }
+        const tab = this.model.tabs[this.activeTab];
+        if (!tab || tab.targets.length === 0) {
+            return null;
+        }
+        // 設定值 1 = 最上層；0 或超出範圍就用最底層
+        const raw = Math.round(this.settings.search.matchLevel.value ?? 0);
+        const idx = raw >= 1 && raw <= tab.targets.length
+            ? raw - 1
+            : tab.targets.length - 1;
+        return FilterEngine.buildSearchFilter(tab.targets[idx], this.appliedQuery);
+    }
+
+    private renderSearchState(): void {
+        this.searchEl.classList.toggle("tts-search-pending", this.searchPending);
+    }
+
+    // ── 說明面板 ───────────────────────────────────────────────────
+
+    private toggleHelp(force?: boolean): void {
+        this.helpOpen = force !== undefined ? force : !this.helpOpen;
+        this.helpPanelEl.style.display = this.helpOpen ? "flex" : "none";
+        this.helpBtn.classList.toggle("tts-help-active", this.helpOpen);
+        if (this.helpOpen) {
+            this.renderHelp();
+        }
+    }
+
+    private renderHelp(): void {
+        clearElement(this.helpPanelEl);
+
+        const head = document.createElement("div");
+        head.className = "tts-helphead";
+        const heading = document.createElement("div");
+        heading.className = "tts-helptitle";
+        heading.textContent = "操作說明";
+        const close = document.createElement("button");
+        close.type = "button";
+        close.className = "tts-helpclose";
+        close.textContent = "✕";
+        close.setAttribute("aria-label", "關閉");
+        close.addEventListener("click", () => this.toggleHelp(false));
+        head.appendChild(heading);
+        head.appendChild(close);
+        this.helpPanelEl.appendChild(head);
+
+        const body = document.createElement("div");
+        body.className = "tts-helpbody";
+        for (const section of HELP_SECTIONS) {
+            const h = document.createElement("div");
+            h.className = "tts-helpsection";
+            h.textContent = section.title;
+            body.appendChild(h);
+
+            const ul = document.createElement("ul");
+            ul.className = "tts-helplist";
+            for (const item of section.items) {
+                const li = document.createElement("li");
+                li.textContent = item;
+                ul.appendChild(li);
+            }
+            body.appendChild(ul);
+        }
+
+        // 選填的外部文件連結。一定要走 launchUrl，
+        // 自訂視覺是跑在沙箱 iframe 裡，直接開新分頁會被擋掉。
+        const url = (this.settings.header.helpUrl.value || "").trim();
+        if (/^https?:\/\//i.test(url)) {
+            const link = document.createElement("button");
+            link.type = "button";
+            link.className = "tts-helplink";
+            link.textContent = "開啟完整說明文件 ↗";
+            link.addEventListener("click", () => this.host.launchUrl(url));
+            body.appendChild(link);
+        }
+
+        this.helpPanelEl.appendChild(body);
+    }
+
+    /** 沒有個別展開狀態時的預設：使用者按過工具列就依工具列，否則跟隨格式窗格 */
+    private defaultExpanded(): boolean {
+        return this.expandAllOverride !== null
+            ? this.expandAllOverride
+            : this.settings.behavior.expandAll.value;
+    }
+
+    /** 工具列的「全部展開 / 全部折疊」，只作用在目前顯示的頁籤 */
+    private setAllExpanded(expand: boolean): void {
+        const tab = this.model.tabs[this.activeTab];
+        if (!tab) {
+            return;
+        }
+        tab.nodeMap.forEach((node, key) => {
+            if (node.children.length === 0) {
+                return;
+            }
+            if (expand) {
+                this.expanded.add(key);
+            } else {
+                this.expanded.delete(key);
+            }
+        });
+        // 覆寫格式窗格的「預設全部展開」，不然折疊會被它蓋回去
+        this.expandAllOverride = expand;
+        this.renderList();
+    }
+
+    /** 目前這個頁籤有沒有可以展開的節點 */
+    private hasExpandableNodes(): boolean {
+        const tab = this.model.tabs[this.activeTab];
+        if (!tab) {
+            return false;
+        }
+        for (const node of tab.roots) {
+            if (node.children.length > 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private toggleExpand(node: TreeNode): void {
+        if (node.children.length === 0) {
+            return;
+        }
+        if (this.expanded.has(node.key)) {
+            this.expanded.delete(node.key);
+        } else {
+            this.expanded.add(node.key);
+        }
+        this.renderList();
     }
 
     // ── 勾選邏輯 ───────────────────────────────────────────────────
@@ -708,19 +1088,60 @@ export class Visual implements IVisual {
             return;
         }
 
-        const apply = (n: TreeNode): void => {
-            if (on) {
-                this.checked.add(n.key);
-            } else {
-                this.checked.delete(n.key);
-            }
-            if (cascade) {
-                n.children.forEach(apply);
-            }
-        };
-        apply(node);
+        this.setNodeChecked(node, on, cascade);
+        this.fixAncestors(node);
 
-        // 往上修正父層：子項全選 → 父項也視為勾選；否則取消父項
+        this.syncSelection(tab);
+        this.commit();
+    }
+
+    /**
+     * 點一列的統一入口。
+     *
+     * 一般點擊 = 單列切換，不影響 Shift 區間的起點。
+     * Shift 點擊 = 第一次設起點（該列同時被勾選），第二次完成區間並清掉起點。
+     * 所以「Shift 起點 → Shift 終點」是完整的一組動作，前面隨手勾過什麼都不影響。
+     */
+    private handleRowToggle(tab: TabModel, row: Row, index: number, on: boolean): void {
+        const shift = this.shiftPending;
+        this.shiftPending = false;
+
+        if (!shift || this.settings.behavior.singleSelect.value) {
+            this.toggleCheck(tab, row.node, on);
+            return;
+        }
+
+        // 起點還在畫面上才算數（搜尋或折疊後可能already不見了）
+        const from = this.shiftAnchorKey === null
+            ? -1
+            : this.visibleRows.findIndex(r => r.node.key === this.shiftAnchorKey);
+
+        if (from < 0) {
+            // 設定起點：該列照常勾選，並標記起來讓使用者看得到
+            this.shiftAnchorKey = row.node.key;
+            this.toggleCheck(tab, row.node, on);
+            return;
+        }
+
+        // 完成區間，並把起點清掉，下一次 Shift 重新開始
+        this.shiftAnchorKey = null;
+        this.applyRange(tab, from, index, on);
+    }
+
+    /** 設定單一節點（含子孫）的勾選狀態，不處理父層與送出 */
+    private setNodeChecked(node: TreeNode, on: boolean, cascade: boolean): void {
+        if (on) {
+            this.checked.add(node.key);
+        } else {
+            this.checked.delete(node.key);
+        }
+        if (cascade) {
+            node.children.forEach(c => this.setNodeChecked(c, on, cascade));
+        }
+    }
+
+    /** 往上修正父層：子項全選 → 父項也視為勾選；否則取消父項 */
+    private fixAncestors(node: TreeNode): void {
         let parent = node.parent;
         while (parent) {
             const allChecked = parent.children.every(c => this.checked.has(c.key));
@@ -731,9 +1152,43 @@ export class Visual implements IVisual {
             }
             parent = parent.parent;
         }
+    }
+
+    /**
+     * Shift 區間勾選：把畫面上 from~to 之間的列全部設成同一個狀態。
+     * 索引是「目前顯示的列」的索引，所以折疊起來的子項不會被掃到 ——
+     * 這跟使用者看到的範圍一致。
+     */
+    private applyRange(tab: TabModel, from: number, to: number, on: boolean): void {
+        const cascade = this.settings.behavior.selectChildren.value;
+        const lo = Math.min(from, to);
+        const hi = Math.max(from, to);
+        const touched: TreeNode[] = [];
+
+        for (let i = lo; i <= hi && i < this.visibleRows.length; i++) {
+            const node = this.visibleRows[i].node;
+            // 祖先已經在範圍內且會連動時就跳過，避免重複套用
+            if (cascade && touched.some(t => this.isDescendantOf(node, t))) {
+                continue;
+            }
+            this.setNodeChecked(node, on, cascade);
+            touched.push(node);
+        }
+        touched.forEach(n => this.fixAncestors(n));
 
         this.syncSelection(tab);
         this.commit();
+    }
+
+    private isDescendantOf(node: TreeNode, ancestor: TreeNode): boolean {
+        let p = node.parent;
+        while (p) {
+            if (p === ancestor) {
+                return true;
+            }
+            p = p.parent;
+        }
+        return false;
     }
 
     /**
@@ -746,6 +1201,63 @@ export class Visual implements IVisual {
             this.selection.delete(tab.index);
         } else {
             this.selection.set(tab.index, sel);
+        }
+    }
+
+    /**
+     * 計數與清除。
+     *
+     * 主要文字是**目前頁籤**的勾選數，點了只清這個頁籤 ——
+     * 它就在「全選」旁邊，而全選也是針對目前頁籤，兩者的範圍要一致。
+     * 其他頁籤還有勾選時，右邊會多出「清除全部」，全域清除仍然做得到。
+     */
+    private renderCount(): void {
+        clearElement(this.countEl);
+
+        const tab = this.model.tabs[this.activeTab];
+        const here = tab ? (this.selection.get(tab.index)?.size ?? 0) : 0;
+        let total = 0;
+        this.selection.forEach(m => { total += m.size; });
+
+        const main = document.createElement("span");
+        main.textContent = here > 0 ? `已選 ${here} 項 · 清除` : "未篩選";
+        main.className = here > 0 ? "tts-count-link" : "";
+        if (here > 0 && tab) {
+            main.title = `清除「${tab.name}」的勾選`;
+            main.addEventListener("click", ev => {
+                ev.stopPropagation();
+                this.clearTab(tab);
+            });
+        }
+        this.countEl.appendChild(main);
+
+        // 只有在別的頁籤也有勾選時才出現，平常不佔位
+        if (total > here) {
+            const all = document.createElement("span");
+            all.className = "tts-count-link tts-count-all";
+            all.textContent = `全部 ${total} · 清除`;
+            all.title = "清除所有頁籤的勾選";
+            all.addEventListener("click", ev => {
+                ev.stopPropagation();
+                this.clearAll();
+            });
+            this.countEl.appendChild(all);
+        }
+    }
+
+    /** 只清掉某個頁籤的勾選 */
+    private clearTab(tab: TabModel): void {
+        let changed = false;
+        tab.nodeMap.forEach((_n, key) => {
+            if (this.checked.delete(key)) {
+                changed = true;
+            }
+        });
+        if (this.selection.delete(tab.index)) {
+            changed = true;
+        }
+        if (changed) {
+            this.commit();
         }
     }
 
@@ -770,14 +1282,19 @@ export class Visual implements IVisual {
         const mode = this.settings.behavior.mode.value.value;
         this.selfApplied = true;
         if (mode === "select") {
+            // 先清掉「篩選器」模式留下的條件，否則報表還是被舊條件篩著，
+            // 交叉醒目提示看起來就像完全沒生效。
+            this.filterEngine.clearFilters();
             this.filterEngine.applySelection(this.model.tabs, this.checked);
         } else {
+            this.filterEngine.clearSelection();
             const activeIndex = this.model.tabs[this.activeTab]?.index ?? -1;
             this.filterEngine.applyFilters(
                 this.model.tabs,
                 this.selection,
                 activeIndex,
-                this.settings.behavior.crossTab.value
+                this.settings.behavior.crossTab.value,
+                this.currentSearchFilter()
             );
         }
         this.render();

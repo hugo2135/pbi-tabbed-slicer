@@ -1,20 +1,6 @@
-# Dependencies
 node_modules/
-
-# Build output
-dist/
 .tmp/
-
-# Editor
 .vscode/
-
-# Power BI tooling
 webpack.statistics*.html
-tools/set-tabs.log
-
-# Lock file
 package-lock.json
-
-# OS
-Thumbs.db
-.DS_Store
+tools/set-tabs.log

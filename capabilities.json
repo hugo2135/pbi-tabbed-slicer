@@ -699,6 +699,20 @@
             "bool": true
           }
         },
+        "showHelp": {
+          "displayName": "顯示說明按鈕",
+          "description": "在標題列顯示「?」，點開後列出這個篩選器的操作方式。",
+          "type": {
+            "bool": true
+          }
+        },
+        "helpUrl": {
+          "displayName": "說明文件網址 (選填)",
+          "description": "填入後，說明面板底部會出現一個連結，點擊會在新視窗開啟。",
+          "type": {
+            "text": true
+          }
+        },
         "fontColor": {
           "displayName": "字型色彩",
           "type": {
@@ -724,6 +738,20 @@
           "displayName": "顯示搜尋框",
           "type": {
             "bool": true
+          }
+        },
+        "serverSide": {
+          "displayName": "伺服器端搜尋",
+          "description": "開啟後，搜尋會送出查詢條件到模型，可搜到超過 30,000 列上限之外的項目。代價是每次搜尋有延遲。",
+          "type": {
+            "bool": true
+          }
+        },
+        "matchLevel": {
+          "displayName": "比對層級",
+          "description": "伺服器端搜尋一次只能比對一個欄位。1 = 最上層，留 0 表示用最底層。",
+          "type": {
+            "numeric": true
           }
         },
         "placeholder": {

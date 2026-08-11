@@ -188,6 +188,19 @@ class HeaderCard extends Card {
         value: true
     });
 
+    showHelp = new formattingSettings.ToggleSwitch({
+        name: "showHelp",
+        displayName: "顯示說明按鈕",
+        value: true
+    });
+
+    helpUrl = new formattingSettings.TextInput({
+        name: "helpUrl",
+        displayName: "說明文件網址 (選填)",
+        value: "",
+        placeholder: "https://..."
+    });
+
     fontColor = new formattingSettings.ColorPicker({
         name: "fontColor",
         displayName: "字型色彩",
@@ -200,7 +213,7 @@ class HeaderCard extends Card {
         value: 14
     });
 
-    slices = [this.text, this.showCount, this.fontColor, this.fontSize];
+    slices = [this.text, this.showCount, this.showHelp, this.helpUrl, this.fontColor, this.fontSize];
 }
 
 class SearchCard extends Card {
@@ -215,6 +228,22 @@ class SearchCard extends Card {
 
     topLevelSlice = this.show;
 
+    serverSide = new formattingSettings.ToggleSwitch({
+        name: "serverSide",
+        displayName: "伺服器端搜尋",
+        value: false
+    });
+
+    matchLevel = new formattingSettings.NumUpDown({
+        name: "matchLevel",
+        displayName: "比對層級（0 = 最底層）",
+        value: 0,
+        options: {
+            minValue: { type: ValidatorType.Min, value: 0 },
+            maxValue: { type: ValidatorType.Max, value: 10 }
+        }
+    });
+
     placeholder = new formattingSettings.TextInput({
         name: "placeholder",
         displayName: "提示文字",
@@ -228,7 +257,7 @@ class SearchCard extends Card {
         value: true
     });
 
-    slices = [this.placeholder, this.searchAllLevels];
+    slices = [this.placeholder, this.searchAllLevels, this.serverSide, this.matchLevel];
 }
 
 class ItemsCard extends Card {

@@ -31,7 +31,8 @@ import {
     ITupleElementValue,
     IFilterColumnTarget,
     BasicFilter,
-    TupleFilter
+    TupleFilter,
+    AdvancedFilter
 } from "powerbi-models";
 
 import { TabModel, TreeNode } from "./dataModel";
@@ -145,7 +146,8 @@ export class FilterEngine {
         tabs: TabModel[],
         selection: SelectionStore,
         activeTabIndex: number,
-        crossTab: boolean
+        crossTab: boolean,
+        searchFilter?: IFilter | null
     ): void {
         const outward: IFilter[] = [];
         const inward: IFilter[] = [];
@@ -161,8 +163,34 @@ export class FilterEngine {
             }
         }
 
+        // 伺服器端搜尋的條件只套回自己，不會影響其他視覺
+        if (searchFilter) {
+            inward.push(searchFilter);
+        }
+
         this.push(FILTER_PROPERTY, outward, "lastOutCount");
-        this.push(SELF_FILTER_PROPERTY, crossTab ? inward : [], "lastSelfCount");
+        this.push(SELF_FILTER_PROPERTY, inward, "lastSelfCount");
+    }
+
+    /**
+     * 伺服器端搜尋條件：對指定欄位做 Contains。
+     *
+     * 為什麼不是前端過濾？前端只看得到已經抓進來的那 30,000 列，
+     * 超出上限的項目根本不在記憶體裡，怎麼搜都搜不到。
+     * 把條件送進查詢，讓模型端去比對，才搜得到全部。
+     *
+     * 限制：AdvancedFilter 的一組條件只能指向**一個欄位**，
+     * 所以多層頁籤沒辦法一次比對所有層級，要指定用哪一層。
+     */
+    public static buildSearchFilter(target: IFilterColumnTarget, query: string): IFilter | null {
+        const text = (query || "").trim();
+        if (!text || !target || !target.table || !target.column) {
+            return null;
+        }
+        return new AdvancedFilter(target, "And", {
+            operator: "Contains",
+            value: text
+        }).toJSON();
     }
 
     private push(property: string, filters: IFilter[], counter: "lastOutCount" | "lastSelfCount"): void {
@@ -203,7 +231,30 @@ export class FilterEngine {
             this.selectionManager.clear();
             return;
         }
+        // 第二個參數是 multiSelect：false 代表「用這組取代目前選取」，
+        // 傳陣列進去仍然是一次選取多個。
         this.selectionManager.select(ids, false);
+    }
+
+    /**
+     * 只清掉送出去的篩選條件（不動 SelectionManager）。
+     * 從「篩選器」切到「選取」模式時一定要呼叫 —— 否則舊條件會留在報表上，
+     * 報表看起來還是被篩過的，交叉醒目提示的效果就被蓋住、像是沒生效。
+     */
+    public clearFilters(): void {
+        if (this.lastOutCount !== 0) {
+            this.host.applyJsonFilter(null, FILTER_OBJECT, FILTER_PROPERTY, FilterAction.remove);
+            this.lastOutCount = 0;
+        }
+        if (this.lastSelfCount !== 0) {
+            this.host.applyJsonFilter(null, FILTER_OBJECT, SELF_FILTER_PROPERTY, FilterAction.remove);
+            this.lastSelfCount = 0;
+        }
+    }
+
+    /** 只清掉交叉醒目提示（不動篩選條件）。從「選取」切回「篩選器」時呼叫。 */
+    public clearSelection(): void {
+        this.selectionManager.clear();
     }
 
     /**

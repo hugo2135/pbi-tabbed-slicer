@@ -14,6 +14,7 @@
   --tts-title-color: #201e1d;
 
   box-sizing: border-box;
+  position: relative;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -31,10 +32,10 @@
 .tts-header {
   flex: none;
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  padding: 4px 6px 4px 2px;
+  gap: 6px;
+  padding: 4px 4px 4px 2px;
 }
 
 .tts-title {
@@ -53,15 +54,136 @@
   color: var(--tts-muted);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+  font-weight: 400;
 }
 
-.tts-count-active {
+
+.tts-count {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+// 可點擊的計數（清除當前頁籤 / 清除全部）
+.tts-count-link {
   color: var(--tts-accent);
   cursor: pointer;
 
   &:hover {
     text-decoration: underline;
   }
+}
+
+.tts-count-all {
+  opacity: 0.75;
+}
+
+// ── 說明按鈕與面板 ────────────────────────────────────
+.tts-help {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: 1px solid var(--tts-line);
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  font-size: calc(var(--tts-font) - 2px);
+  line-height: 1;
+  color: var(--tts-muted);
+  align-self: center;
+
+  &:hover {
+    color: var(--tts-accent);
+    border-color: var(--tts-accent);
+  }
+}
+
+.tts-help-active {
+  color: var(--tts-accent);
+  border-color: var(--tts-accent);
+}
+
+.tts-helppanel {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  background: var(--tts-bg);
+  border: 1px solid var(--tts-line);
+  border-radius: 3px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
+}
+
+.tts-helphead {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 8px;
+  box-shadow: inset 0 -1px 0 var(--tts-line);
+}
+
+.tts-helptitle {
+  font-weight: 600;
+  color: var(--tts-text);
+}
+
+.tts-helpclose {
+  flex: none;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  color: var(--tts-muted);
+  padding: 0 2px;
+
+  &:hover {
+    color: var(--tts-accent);
+  }
+}
+
+.tts-helpbody {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 6px 8px 10px;
+  transform: translateZ(0);
+}
+
+.tts-helpsection {
+  font-weight: 600;
+  color: var(--tts-accent);
+  margin-top: 8px;
+
+  &:first-child {
+    margin-top: 0;
+  }
+}
+
+.tts-helplist {
+  margin: 2px 0 0;
+  padding-left: 16px;
+
+  li {
+    line-height: 1.45;
+    margin-bottom: 2px;
+    color: var(--tts-text);
+  }
+}
+
+.tts-helplink {
+  margin-top: 10px;
+  border: 0;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+  color: var(--tts-accent);
+  text-decoration: underline;
 }
 
 // ── 頁籤列 ────────────────────────────────────────────
@@ -145,10 +267,12 @@
 }
 
 .tts-tab-colored {
-  // 自訂背景色由 visual.ts 內嵌設定；hover 的半透明疊色會蓋掉它，這裡取消
+  // 自訂背景色由 visual.ts 內嵌設定，hover 的半透明疊色會蓋掉它，這裡取消。
+  // 不要用 filter/opacity/transform —— 它們會讓元素獨立成合成圖層，
+  // 在縮放過的報表畫布裡會先以未縮放解析度點陣化，文字就糊掉了。
   &:hover {
     background: inherit;
-    filter: brightness(0.96);
+    box-shadow: inset 0 0 0 999px rgba(0, 0, 0, 0.04);
   }
 }
 
@@ -160,6 +284,37 @@
   border-radius: 50%;
   background: var(--tts-accent);
   vertical-align: middle;
+}
+
+// ── 工具列（全部展開 / 全部折疊）────────────────────────
+.tts-toolbar {
+  flex: none;
+  display: flex;
+  gap: 4px;
+  padding: 5px 2px 0;
+}
+
+.tts-toolbtn {
+  flex: none;
+  border: 1px solid var(--tts-line);
+  border-radius: 3px;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  font-size: calc(var(--tts-font) - 1px);
+  color: var(--tts-muted);
+  padding: 2px 8px;
+  white-space: nowrap;
+
+  &:hover {
+    color: var(--tts-accent);
+    border-color: var(--tts-accent);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--tts-accent);
+    outline-offset: -2px;
+  }
 }
 
 // ── 搜尋 ──────────────────────────────────────────────
@@ -187,6 +342,40 @@
   }
 }
 
+// 伺服器端搜尋等待查詢回來時的提示
+.tts-search-pending {
+  border-color: var(--tts-accent);
+  background-image: linear-gradient(90deg,
+    transparent 0%,
+    fade(#0088b0, 12%) 50%,
+    transparent 100%);
+  background-size: 40% 100%;
+  background-repeat: no-repeat;
+  animation: tts-search-scan 900ms linear infinite;
+}
+
+@keyframes tts-search-scan {
+  from { background-position: -40% 0; }
+  to   { background-position: 140% 0; }
+}
+
+// ── 固定狀態列（全選 + 計數）──────────────────────────
+.tts-statusbar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: var(--tts-row-h);
+  padding: 0 4px 0 0;
+  font-weight: 600;
+  box-shadow: inset 0 -1px 0 var(--tts-line);
+
+  // 計數固定靠右
+  .tts-count {
+    margin-left: auto;
+  }
+}
+
 // ── 清單 ──────────────────────────────────────────────
 .tts-list {
   flex: 1 1 auto;
@@ -194,6 +383,12 @@
   overflow-y: auto;
   overflow-x: hidden;
   padding-right: 2px;
+
+  // 列數超過高度而出現捲軸時，Chromium 會把捲動容器提升成合成圖層。
+  // 在 Power BI 服務「符合頁面」這種縮放過的畫布下，該圖層會以未縮放的
+  // 解析度點陣化再放大 → 文字模糊。下面兩行讓它以裝置實際解析度點陣化。
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .tts-row {
@@ -212,6 +407,16 @@
 .tts-row-all {
   font-weight: 600;
   box-shadow: inset 0 -1px 0 var(--tts-line);
+}
+
+// 有下層的列：右鍵可展開/折疊
+.tts-row-expandable {
+  cursor: context-menu;
+}
+
+// Shift 區間的起點：等待你按住 Shift 點第二個位置
+.tts-row-anchor {
+  box-shadow: inset 2px 0 0 var(--tts-accent);
 }
 
 .tts-check {
@@ -238,7 +443,6 @@
   line-height: 1;
   border-radius: 2px;
   transform: rotate(0deg);
-  transition: transform 120ms ease;
 
   &:hover {
     color: var(--tts-accent);
