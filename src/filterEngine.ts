@@ -141,6 +141,11 @@ export class FilterEngine {
      * filter 模式：
      *  - 對外送出全部頁籤的條件
      *  - crossTab 開啟時，另外把「目前頁籤以外」的條件套回自己
+     *
+     * 回傳這次總共呼叫了幾次 host.applyJsonFilter（general.filter 和
+     * general.selfFilter 是兩個獨立屬性，各自可能觸發一次 update()）。
+     * 呼叫端要用這個數字去抵銷接下來會收到的 update，
+     * 不然只擋得住其中一次，另一次會被誤判成外部帶進來的條件而覆寫勾選狀態。
      */
     public applyFilters(
         tabs: TabModel[],
@@ -148,7 +153,7 @@ export class FilterEngine {
         activeTabIndex: number,
         crossTab: boolean,
         searchFilter?: IFilter | null
-    ): void {
+    ): number {
         const outward: IFilter[] = [];
         const inward: IFilter[] = [];
 
@@ -168,8 +173,9 @@ export class FilterEngine {
             inward.push(searchFilter);
         }
 
-        this.push(FILTER_PROPERTY, outward, "lastOutCount");
-        this.push(SELF_FILTER_PROPERTY, inward, "lastSelfCount");
+        const a = this.push(FILTER_PROPERTY, outward, "lastOutCount");
+        const b = this.push(SELF_FILTER_PROPERTY, inward, "lastSelfCount");
+        return a + b;
     }
 
     /**
@@ -193,24 +199,30 @@ export class FilterEngine {
         }).toJSON();
     }
 
-    private push(property: string, filters: IFilter[], counter: "lastOutCount" | "lastSelfCount"): void {
+    /** 回傳這次呼叫了幾次 host.applyJsonFilter（0、1 或 2） */
+    private push(property: string, filters: IFilter[], counter: "lastOutCount" | "lastSelfCount"): number {
         const previous = this[counter];
+        let calls = 0;
 
         if (filters.length === 0) {
             if (previous !== 0) {
                 this.host.applyJsonFilter(null, FILTER_OBJECT, property, FilterAction.remove);
+                calls++;
             }
             this[counter] = 0;
-            return;
+            return calls;
         }
 
         // 條件數變少代表有頁籤被清空，merge 不會移除舊條件，先整個清掉
         if (filters.length < previous) {
             this.host.applyJsonFilter(null, FILTER_OBJECT, property, FilterAction.remove);
+            calls++;
         }
 
         this.host.applyJsonFilter(filters, FILTER_OBJECT, property, FilterAction.merge);
+        calls++;
         this[counter] = filters.length;
+        return calls;
     }
 
     /** select 模式：交叉醒目提示 */
@@ -241,15 +253,19 @@ export class FilterEngine {
      * 從「篩選器」切到「選取」模式時一定要呼叫 —— 否則舊條件會留在報表上，
      * 報表看起來還是被篩過的，交叉醒目提示的效果就被蓋住、像是沒生效。
      */
-    public clearFilters(): void {
+    public clearFilters(): number {
+        let calls = 0;
         if (this.lastOutCount !== 0) {
             this.host.applyJsonFilter(null, FILTER_OBJECT, FILTER_PROPERTY, FilterAction.remove);
             this.lastOutCount = 0;
+            calls++;
         }
         if (this.lastSelfCount !== 0) {
             this.host.applyJsonFilter(null, FILTER_OBJECT, SELF_FILTER_PROPERTY, FilterAction.remove);
             this.lastSelfCount = 0;
+            calls++;
         }
+        return calls;
     }
 
     /** 只清掉交叉醒目提示（不動篩選條件）。從「選取」切回「篩選器」時呼叫。 */

@@ -190,8 +190,17 @@ export class Visual implements IVisual {
     private appliedQuery = "";
     /** 等待查詢回來時顯示提示，避免使用者以為當掉 */
     private searchPending = false;
-    /** 剛剛是我們自己送出篩選，下一次 update 不要再從 jsonFilters 還原 */
-    private selfApplied = false;
+    /**
+     * 還有幾次「我們自己送出的」update 還沒收到。
+     *
+     * 一次 commit() 可能同時改 general.filter 和 general.selfFilter
+     * 兩個獨立屬性（伺服器端搜尋開著時尤其如此），每個屬性各自可能觸發
+     * 一次 update()。曾經用布林值只擋得住第一次，第二次就被誤判成外部
+     * 帶進來的條件，從 jsonFilters 重建出不完整的勾選狀態，
+     * 導致「取消勾選 B 時連 A 也被清掉」之類的假象。所以改成計數器，
+     * 送出幾次 applyJsonFilter 就記幾次，每收到一次 update 才扣一次。
+     */
+    private pendingSelfUpdates = 0;
     private events: powerbi.extensibility.IVisualEventService;
     private isHighContrast = false;
 
@@ -432,9 +441,9 @@ export class Visual implements IVisual {
         }
 
         // 從外部（報表重新開啟、書籤、同步篩選器）帶進來的篩選狀態，
-        // 還原成畫面上的勾選；自己剛送出的那一次則略過，避免互相覆蓋。
-        if (this.selfApplied) {
-            this.selfApplied = false;
+        // 還原成畫面上的勾選；自己剛送出的那幾次則略過，避免互相覆蓋。
+        if (this.pendingSelfUpdates > 0) {
+            this.pendingSelfUpdates--;
         } else if (this.settings.behavior.mode.value.value === "filter" && this.model.tabs.length > 0) {
             const jsonFilters = (options as { jsonFilters?: unknown[] }).jsonFilters as IFilter[];
             const result = this.filterEngine.restoreChecked(this.model.tabs, jsonFilters || []);
@@ -1292,16 +1301,15 @@ export class Visual implements IVisual {
         }
 
         const mode = this.settings.behavior.mode.value.value;
-        this.selfApplied = true;
         if (mode === "select") {
             // 先清掉「篩選器」模式留下的條件，否則報表還是被舊條件篩著，
             // 交叉醒目提示看起來就像完全沒生效。
-            this.filterEngine.clearFilters();
+            this.pendingSelfUpdates += this.filterEngine.clearFilters();
             this.filterEngine.applySelection(this.model.tabs, this.checked);
         } else {
             this.filterEngine.clearSelection();
             const activeIndex = this.model.tabs[this.activeTab]?.index ?? -1;
-            this.filterEngine.applyFilters(
+            this.pendingSelfUpdates += this.filterEngine.applyFilters(
                 this.model.tabs,
                 this.selection,
                 activeIndex,
