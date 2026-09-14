@@ -19,7 +19,7 @@ import { IFilter } from "powerbi-models";
 
 import { VisualSettings } from "./settings";
 import { transform, MAX_TABS, SlicerModel, TabModel, TreeNode } from "./dataModel";
-import { FilterEngine, SelectionStore, collectSelection } from "./filterEngine";
+import { FilterEngine, SelectionStore, TabSelection, collectSelection, pathSignature } from "./filterEngine";
 
 /** #rrggbb / #rgb → [r,g,b]；解析失敗回傳 null */
 function parseHex(hex: string): [number, number, number] | null {
@@ -1193,14 +1193,26 @@ export class Visual implements IVisual {
 
     /**
      * 把目前頁籤的勾選狀態固化成「葉層路徑」存進 selection。
-     * 只在該頁籤正在顯示、樹是完整的時候呼叫。
+     *
+     * 伺服器端搜尋開啟時，樹不一定完整 —— 搜尋條件是用 selfFilter 送回查詢的，
+     * 不符合的列會直接從 dataView 消失，不只是畫面上被濾掉。若整批覆蓋
+     * selection，前一次搜尋勾選、這次搜尋看不到的項目就會被當成沒勾而遺失，
+     * 造成畫面顯示的勾選和實際送出的篩選條件分岔。所以這裡改成合併：
+     * 目前樹上看得到的葉節點依 checked 重新計算，看不到的舊選項原樣保留。
      */
     private syncSelection(tab: TabModel): void {
-        const sel = collectSelection(tab, this.checked);
-        if (sel.size === 0) {
+        const fresh = collectSelection(tab, this.checked);
+        const visible = new Set(tab.leaves.map(l => pathSignature(l.path)));
+        const merged: TabSelection = new Map(fresh);
+        this.selection.get(tab.index)?.forEach((path, sig) => {
+            if (!visible.has(sig) && !merged.has(sig)) {
+                merged.set(sig, path);
+            }
+        });
+        if (merged.size === 0) {
             this.selection.delete(tab.index);
         } else {
-            this.selection.set(tab.index, sel);
+            this.selection.set(tab.index, merged);
         }
     }
 

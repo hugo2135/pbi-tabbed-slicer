@@ -1,6 +1,6 @@
 {
   "name": "tabbed-tree-slicer",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "分頁籤式階層勾選篩選器 (Tabbed Hierarchy Slicer) for Power BI",
   "scripts": {
     "pbiviz": "pbiviz",

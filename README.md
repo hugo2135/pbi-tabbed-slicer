@@ -17,7 +17,7 @@ Power BI 自訂視覺。把多個原本各自獨立的篩選器整合進一個�
 
 ## 安裝
 
-`dist/tabbedTreeSlicerA99A12E39D0F43AF91750CD513033959.1.0.0.0.pbiviz`
+`dist/tabbedTreeSlicerA99A12E39D0F43AF91750CD513033959.1.0.1.0.pbiviz`
 
 Power BI Desktop → 視覺效果窗格 `…` → **從檔案匯入視覺效果**
 
